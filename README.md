@@ -4,6 +4,11 @@ This repository contains source code for a Windows console application, `fast2kb
 
 For example, on a Windows-based arcade machine with a Fast I/O control system, `fast2kb.exe` can serve input to a DirectInput-compatible emulator such as MAME or PPSSPP.
 
+## Credits
+
+* **Maintainer:** Joseph Howse (<josephhowse@nummist.com>)
+* **Authors:** Corey Griffith, Joseph Howse
+
 ## System Requirements
 
 * **Operating system:** Windows XP or later. Tested successfully with:
@@ -106,7 +111,6 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 
 ## To-do
 
-* Add license
 * Consider batching input events into fewer SendInput calls
 * Add support for Players 3&4
 * Test compatibility with other Windows versions
@@ -119,6 +123,10 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 
 ## Changelog
 
+### 2020-06-08
+
+* Added license based on zlib License, with permission from Corey Griffith ([fatal-bundy](https://github.com/fatal-bundy))
+
 ### 2020-06-07
 
 * Forked from [fatal-bundy/KB2FastIO](https://github.com/fatal-bundy/FastIO2KB)
@@ -130,6 +138,7 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
   * PPSSPP keymap
 * Refactored code
 * Added control handler function for cleaner termination
+* Shortened polling interval to 1ms (instead of 10ms)
 * Fixed bugs that caused keypress (keydown) events to be reported multiple times
 * Added support for the following inputs:
   * Player 1 Buttons 7&8
