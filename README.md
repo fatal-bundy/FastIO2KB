@@ -22,7 +22,6 @@ For example, on a Windows-based arcade machine with a Fast I/O control system, `
 ## Troubleshooting
 
 * Copy `iDmacDrv32.dll` (a version that is compatible with your Fast I/O DMAC board) into the same directory as `fast2b.exe`.
-* Plug the Fast I/O (Ethernet) cable into another port in your Fast I/O DMAC board. A typical board has two Fast I/O ports, which `fast2b.exe` interprets as one port for Players 1&2 (supported) and another port for Players 3&4 (not yet supported).
 
 ## Build Configurations and Keymaps
 
@@ -122,6 +121,14 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 * Consider adding fallback to JVS in case where Fast I/O is unavailable
 
 ## Changelog
+
+### 2020-06-10
+
+* Refactored code
+* Added support for connecting Player 1&2 microcontroller board to either Port 1 or 2 of DMAC board
+* Added support for extended keyboard scan codes
+* Fixed bugs in mapping of Player 2 Up, Down, Left, Right
+* Fixed type correctness issues
 
 ### 2020-06-08
 

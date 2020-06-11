@@ -65,9 +65,9 @@ struct FIOKEYS
 
 
 typedef int(*dmacOpen)(int, LPVOID, LPVOID);
-typedef int(*dmacRead)(int, DWORD, int, LPVOID);
+typedef int(*dmacRead)(int, DWORD, LPVOID, LPVOID);
 typedef int(*dmacWrite)(int, DWORD, int, LPVOID);
-typedef int(*dmacClose)(int, int);
+typedef int(*dmacClose)(int, LPVOID);
 
 HMODULE dmacdll = LoadLibrary(TEXT("iDmacDrv32.dll"));
 
@@ -77,9 +77,10 @@ dmacWrite iDmacDrvRegisterWrite = (dmacWrite)GetProcAddress(dmacdll, "iDmacDrvRe
 dmacClose iDmacDrvClose = (dmacClose)GetProcAddress(dmacdll, "iDmacDrvClose");
 
 
-int dword_9F47B4;
-int dword_9F47AC;
-int dword_9B4208 = 1;
+int deviceIndex = 1;
+int deviceId;
+int buttonsAddressP1P2;
+int buttonsAddressP3P4;
 
 HANDLE hMainThread;
 BOOL keepPolling = TRUE;
@@ -98,65 +99,80 @@ BOOL WINAPI ctrlHandler(DWORD signal)
 }
 
 
-BOOL __cdecl FIO_RegRead(int a1, int a2)
+BOOL __cdecl FIO_Open()
 {
-	return iDmacDrvRegisterRead(dword_9F47B4, a1, a2, &dword_9F47AC) == 0;
+	int flags = 0x0;
+	return iDmacDrvOpen(deviceIndex, &deviceId, &flags) == 0;
 }
 
 
-int __cdecl FIO_Open()
+BOOL __cdecl FIO_RegRead(DWORD address, int &data_out)
 {
-	int result; // eax@10
-	unsigned int v1; // [sp+0h] [bp-8h]@1
-	int v2; // [sp+4h] [bp-4h]@15
+	int flags = 0x0;
+	return iDmacDrvRegisterRead(deviceId, address, &data_out, &flags) == 0;
+}
 
-	v1 = iDmacDrvOpen(dword_9B4208, &dword_9F47B4, &dword_9F47AC);
-	if (v1)
-	{
-		return 0;
-	}
 
-	if (FIO_RegRead(1024, (int)&v2))
+BOOL assignPlayers()
+{
+	int data;
+	BOOL port1HasConnection = FIO_RegRead(0x4000, data) && data & 0xff;
+	BOOL port2HasConnection = FIO_RegRead(0x4004, data) && data & 0xff;
+
+	if (port1HasConnection)
 	{
-		if (FIO_RegRead(0x4000, (int)&v2))
+		buttonsAddressP1P2 = 0x4120;
+		LOG_VERBOSE("Port 1: Player 1 + Player 2\n");
+		if (port2HasConnection)
 		{
-			if (FIO_RegRead(16388, (int)&v2))
-			{
-				result = 1;
-			}
-			else
-			{
-				result = 0;
-			}
+			buttonsAddressP3P4 = 0x41a0;
+			LOG_VERBOSE("Port 2: Player 3 + Player 4\n");
 		}
 		else
 		{
-			result = 0;
+			buttonsAddressP3P4 = NULL;
+			LOG_VERBOSE("Port 2: Empty\n");
 		}
 	}
 	else
 	{
-		result = 0;
+		buttonsAddressP3P4 = NULL;
+		LOG_VERBOSE("Port 1: Empty\n");
+		if (port2HasConnection)
+		{
+			buttonsAddressP1P2 = 0x41a0;
+			LOG_VERBOSE("Port 2: Player 1 + Player 2\n");
+		}
+		else
+		{
+			buttonsAddressP1P2 = NULL;
+			LOG_VERBOSE("Port 2: Empty\n");
+			return FALSE;
+		}
 	}
-	return result;
+
+	return TRUE;
 }
 
 
-void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
+void poll(FIOKEYS &fioKeys, INPUT &diEvent)
 {
-	int readButtons;
-	FIO_RegRead(0x4120, int(&readButtons));
-	if (readButtons != 0x0)
+	int buttonsData;
+	if (!FIO_RegRead(buttonsAddressP1P2, buttonsData))
 	{
-		LOG_VERBOSE("readButtons=0x%x\n", readButtons);
+		return;
+	}
+	if (buttonsData != 0x0)
+	{
+		LOG_VERBOSE("buttonsData=0x%x\n", buttonsData);
 	}
 
 	// Player 1 Start + Player 1 Button 1 + Player 1 Button 3
-	if (readButtons & 0x10 && readButtons & 0x10000 && readButtons & 0x100000)
+	if (buttonsData & 0x10 && buttonsData & 0x10000 && buttonsData & 0x100000)
 	{
 		if (fioKeys.kesc_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = S_ESC_FLAGS;
 			diEvent.ki.wScan = S_ESC;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kesc_flag = 1;
@@ -165,7 +181,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kesc_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = S_ESC_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = S_ESC;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kesc_flag = 0;
@@ -173,11 +189,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Coin 1
-	if (readButtons & 0x1)
+	if (buttonsData & 0x1)
 	{
 		if (fioKeys.kcoin_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = S_COIN1_FLAGS;
 			diEvent.ki.wScan = S_COIN1;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kcoin_flag = 1;
@@ -186,7 +202,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kcoin_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = S_COIN1_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = S_COIN1;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kcoin_flag = 0;
@@ -194,11 +210,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Coin 2
-	if (readButtons & 0x2)
+	if (buttonsData & 0x2)
 	{
 		if (fioKeys.k2coin_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = S_COIN2_FLAGS;
 			diEvent.ki.wScan = S_COIN2;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2coin_flag = 1;
@@ -207,7 +223,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2coin_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = S_COIN2_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = S_COIN2;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2coin_flag = 0;
@@ -215,11 +231,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Service 1
-	if (readButtons & 0x4)
+	if (buttonsData & 0x4)
 	{
 		if (fioKeys.kservice_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = S_SERVICE1_FLAGS;
 			diEvent.ki.wScan = S_SERVICE1;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kservice_flag = 1;
@@ -228,7 +244,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kservice_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = S_SERVICE1_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = S_SERVICE1;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kservice_flag = 0;
@@ -236,11 +252,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Service 2
-	if (readButtons & 0x8)
+	if (buttonsData & 0x8)
 	{
 		if (fioKeys.k2service_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = S_SERVICE2_FLAGS;
 			diEvent.ki.wScan = S_SERVICE2;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2service_flag = 1;
@@ -249,7 +265,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2service_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = S_SERVICE2_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = S_SERVICE2;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2service_flag = 0;
@@ -257,11 +273,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Start
-	if (readButtons & 0x10)
+	if (buttonsData & 0x10)
 	{
 		if (fioKeys.kstart_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P1_START_FLAGS;
 			diEvent.ki.wScan = P1_START;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kstart_flag = 1;
@@ -270,7 +286,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kstart_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_START_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_START;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kstart_flag = 0;
@@ -278,11 +294,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Start
-	if (readButtons & 0x20)
+	if (buttonsData & 0x20)
 	{
 		if (fioKeys.k2start_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P2_START_FLAGS;
 			diEvent.ki.wScan = P2_START;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2start_flag = 1;
@@ -291,7 +307,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2start_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_START_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_START;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2start_flag = 0;
@@ -299,11 +315,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Test
-	if (readButtons & 0x40)
+	if (buttonsData & 0x40)
 	{
 		if (fioKeys.ktest_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = S_TEST_FLAGS;
 			diEvent.ki.wScan = S_TEST;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.ktest_flag = 1;
@@ -312,7 +328,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.ktest_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = S_TEST_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = S_TEST;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.ktest_flag = 0;
@@ -320,11 +336,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Tilt
-	if (readButtons & 0x80)
+	if (buttonsData & 0x80)
 	{
 		if (fioKeys.ktilt_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = S_TILT_FLAGS;
 			diEvent.ki.wScan = S_TILT;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.ktilt_flag = 1;
@@ -333,7 +349,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.ktilt_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = S_TILT_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = S_TILT;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.ktilt_flag = 0;
@@ -341,11 +357,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Up
-	if (readButtons & 0x100)
+	if (buttonsData & 0x100)
 	{
 		if (fioKeys.kup_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY;
+			diEvent.ki.dwFlags = P1_UP_FLAGS;
 			diEvent.ki.wScan = P1_UP;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kup_flag = 1;
@@ -354,7 +370,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kup_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_UP_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_UP;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kup_flag = 0;
@@ -362,11 +378,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Up
-	if (readButtons & 0x200)
+	if (buttonsData & 0x200)
 	{
 		if (fioKeys.k2up_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY;
+			diEvent.ki.dwFlags = P2_UP_FLAGS;
 			diEvent.ki.wScan = P2_UP;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2up_flag = 1;
@@ -375,7 +391,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2up_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_UP_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_UP;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2up_flag = 0;
@@ -383,11 +399,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Down
-	if (readButtons & 0x400)
+	if (buttonsData & 0x400)
 	{
 		if (fioKeys.kdown_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY;
+			diEvent.ki.dwFlags = P1_DOWN_FLAGS;
 			diEvent.ki.wScan = P1_DOWN;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kdown_flag = 1;
@@ -396,7 +412,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kdown_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_DOWN_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_DOWN;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kdown_flag = 0;
@@ -404,11 +420,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Down
-	if (readButtons & 0x800)
+	if (buttonsData & 0x800)
 	{
 		if (fioKeys.k2down_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY;
+			diEvent.ki.dwFlags = P2_DOWN_FLAGS;
 			diEvent.ki.wScan = P2_DOWN;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2down_flag = 1;
@@ -417,7 +433,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2down_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_DOWN_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_DOWN;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2down_flag = 0;
@@ -425,11 +441,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Left
-	if (readButtons & 0x1000)
+	if (buttonsData & 0x1000)
 	{
 		if (fioKeys.kleft_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY;
+			diEvent.ki.dwFlags = P1_LEFT_FLAGS;
 			diEvent.ki.wScan = P1_LEFT;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kleft_flag = 1;
@@ -438,7 +454,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kleft_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_LEFT_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_LEFT;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kleft_flag = 0;
@@ -446,11 +462,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Left
-	if (readButtons & 0x2000)
+	if (buttonsData & 0x2000)
 	{
 		if (fioKeys.k2left_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY;
+			diEvent.ki.dwFlags = P2_LEFT_FLAGS;
 			diEvent.ki.wScan = P2_LEFT;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2left_flag = 1;
@@ -459,7 +475,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2left_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_LEFT_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_LEFT;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2left_flag = 0;
@@ -467,11 +483,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Right
-	if (readButtons & 0x4000)
+	if (buttonsData & 0x4000)
 	{
 		if (fioKeys.kright_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY;
+			diEvent.ki.dwFlags = P1_RIGHT_FLAGS;
 			diEvent.ki.wScan = P1_RIGHT;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kright_flag = 1;
@@ -480,7 +496,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kright_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_RIGHT_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_RIGHT;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kright_flag = 0;
@@ -488,11 +504,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Right
-	if (readButtons & 0x8000)
+	if (buttonsData & 0x8000)
 	{
 		if (fioKeys.k2right_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY;
+			diEvent.ki.dwFlags = P2_RIGHT_FLAGS;
 			diEvent.ki.wScan = P2_RIGHT;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2right_flag = 1;
@@ -501,7 +517,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2right_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_RIGHT_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_RIGHT;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2right_flag = 0;
@@ -509,11 +525,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Button 1
-	if (readButtons & 0x10000)
+	if (buttonsData & 0x10000)
 	{
 		if (fioKeys.kb1_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P1_BTN1_FLAGS;
 			diEvent.ki.wScan = P1_BTN1;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kb1_flag = 1;
@@ -522,7 +538,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kb1_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_BTN1_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_BTN1;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kb1_flag = 0;
@@ -530,11 +546,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Button 1
-	if (readButtons & 0x20000)
+	if (buttonsData & 0x20000)
 	{
 		if (fioKeys.k2b1_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P2_BTN1_FLAGS;
 			diEvent.ki.wScan = P2_BTN1;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2b1_flag = 1;
@@ -543,7 +559,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2b1_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_BTN1_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_BTN1;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2b1_flag = 0;
@@ -551,11 +567,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Button 2
-	if (readButtons & 0x40000)
+	if (buttonsData & 0x40000)
 	{
 		if (fioKeys.kb2_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P1_BTN2_FLAGS;
 			diEvent.ki.wScan = P1_BTN2;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kb2_flag = 1;
@@ -564,7 +580,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kb2_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_BTN2_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_BTN2;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kb2_flag = 0;
@@ -572,11 +588,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Button 2
-	if (readButtons & 0x80000)
+	if (buttonsData & 0x80000)
 	{
 		if (fioKeys.k2b2_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P2_BTN2_FLAGS;
 			diEvent.ki.wScan = P2_BTN2;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2b2_flag = 1;
@@ -585,7 +601,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2b2_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_BTN2_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_BTN2;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2b2_flag = 0;
@@ -593,11 +609,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Button 3
-	if (readButtons & 0x100000)
+	if (buttonsData & 0x100000)
 	{
 		if (fioKeys.kb3_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P1_BTN3_FLAGS;
 			diEvent.ki.wScan = P1_BTN3;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kb3_flag = 1;
@@ -606,7 +622,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kb3_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_BTN3_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_BTN3;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kb3_flag = 0;
@@ -614,11 +630,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Button 3
-	if (readButtons & 0x200000)
+	if (buttonsData & 0x200000)
 	{
 		if (fioKeys.k2b3_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P2_BTN3_FLAGS;
 			diEvent.ki.wScan = P2_BTN3;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2b3_flag = 1;
@@ -627,7 +643,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2b3_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_BTN3_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_BTN3;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2b3_flag = 0;
@@ -635,11 +651,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Button 4
-	if (readButtons & 0x400000)
+	if (buttonsData & 0x400000)
 	{
 		if (fioKeys.kb4_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P1_BTN4_FLAGS;
 			diEvent.ki.wScan = P1_BTN4;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kb4_flag = 1;
@@ -648,7 +664,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kb4_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_BTN4_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_BTN4;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kb4_flag = 0;
@@ -656,11 +672,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Button 4
-	if (readButtons & 0x800000)
+	if (buttonsData & 0x800000)
 	{
 		if (fioKeys.k2b4_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P2_BTN4_FLAGS;
 			diEvent.ki.wScan = P2_BTN4;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2b4_flag = 1;
@@ -669,7 +685,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2b4_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_BTN4_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_BTN4;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2b4_flag = 0;
@@ -677,11 +693,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Button 5
-	if (readButtons & 0x1000000)
+	if (buttonsData & 0x1000000)
 	{
 		if (fioKeys.kb5_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P1_BTN5_FLAGS;
 			diEvent.ki.wScan = P1_BTN5;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kb5_flag = 1;
@@ -690,7 +706,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kb5_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_BTN5_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_BTN5;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kb5_flag = 0;
@@ -698,11 +714,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Button 5
-	if (readButtons & 0x2000000)
+	if (buttonsData & 0x2000000)
 	{
 		if (fioKeys.k2b5_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P2_BTN5_FLAGS;
 			diEvent.ki.wScan = P2_BTN5;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2b5_flag = 1;
@@ -711,7 +727,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2b5_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_BTN5_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_BTN5;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2b5_flag = 0;
@@ -719,11 +735,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Button 6
-	if (readButtons & 0x4000000)
+	if (buttonsData & 0x4000000)
 	{
 		if (fioKeys.kb6_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P1_BTN6_FLAGS;
 			diEvent.ki.wScan = P1_BTN6;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kb6_flag = 1;
@@ -732,7 +748,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kb6_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_BTN6_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_BTN6;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kb6_flag = 0;
@@ -740,11 +756,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Button 6
-	if (readButtons & 0x8000000)
+	if (buttonsData & 0x8000000)
 	{
 		if (fioKeys.k2b6_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P2_BTN6_FLAGS;
 			diEvent.ki.wScan = P2_BTN6;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2b6_flag = 1;
@@ -753,7 +769,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2b6_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_BTN6_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_BTN6;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2b6_flag = 0;
@@ -761,11 +777,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Button 7
-	if (readButtons & 0x10000000)
+	if (buttonsData & 0x10000000)
 	{
 		if (fioKeys.kb7_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P1_BTN7_FLAGS;
 			diEvent.ki.wScan = P1_BTN7;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kb7_flag = 1;
@@ -774,7 +790,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kb7_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_BTN7_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_BTN7;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kb7_flag = 0;
@@ -782,11 +798,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Button 7
-	if (readButtons & 0x20000000)
+	if (buttonsData & 0x20000000)
 	{
 		if (fioKeys.k2b7_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P2_BTN7_FLAGS;
 			diEvent.ki.wScan = P2_BTN7;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2b7_flag = 1;
@@ -795,7 +811,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2b7_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_BTN7_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_BTN7;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2b7_flag = 0;
@@ -803,11 +819,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 1 Button 8
-	if (readButtons & 0x40000000)
+	if (buttonsData & 0x40000000)
 	{
 		if (fioKeys.kb8_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P1_BTN8_FLAGS;
 			diEvent.ki.wScan = P1_BTN8;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.kb8_flag = 1;
@@ -816,7 +832,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.kb8_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P1_BTN8_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P1_BTN8;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.kb8_flag = 0;
@@ -824,11 +840,11 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 
 	// Player 2 Button 8
-	if (readButtons & 0x80000000)
+	if (buttonsData & 0x80000000)
 	{
 		if (fioKeys.k2b8_flag == 0)
 		{
-			diEvent.ki.dwFlags = KEYEVENTF_SCANCODE;
+			diEvent.ki.dwFlags = P2_BTN8_FLAGS;
 			diEvent.ki.wScan = P2_BTN8;
 			SendInput(1, &diEvent, sizeof(INPUT));
 			fioKeys.k2b8_flag = 1;
@@ -837,7 +853,7 @@ void dmacPoll(FIOKEYS &fioKeys, INPUT diEvent)
 	}
 	else if (fioKeys.k2b8_flag == 1)
 	{
-		diEvent.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+		diEvent.ki.dwFlags = P2_BTN8_FLAGS | KEYEVENTF_KEYUP;
 		diEvent.ki.wScan = P2_BTN8;
 		SendInput(1, &diEvent, sizeof(INPUT));
 		fioKeys.k2b8_flag = 0;
@@ -866,12 +882,16 @@ int main()
 		return 1;
 	}
 
-	int drvOpen = FIO_Open();
-	if (!drvOpen)
+	if (!FIO_Open())
 	{
 		DWORD error = GetLastError();
 		LOG_ERROR("Failed to open iDmacDrv device. Error code: %d\n", error);
 		return 1;
+	}
+
+	if (!assignPlayers())
+	{
+		LOG_ERROR("Failed to detect any I/O connection for any player\n");
 	}
 
 	FIOKEYS fioKeys = { 0 };
@@ -882,7 +902,7 @@ int main()
 	LOG_VERBOSE("Starting to poll input registers...\n");
 	while (keepPolling)
 	{
-		dmacPoll(fioKeys, diEvent);
+		poll(fioKeys, diEvent);
 		Sleep(POLLING_INTERVAL);
 	}
 	LOG_VERBOSE("Finished polling input registers\n");
