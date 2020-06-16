@@ -122,6 +122,11 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 
 ## Changelog
 
+### 2020-06-16
+
+* Configured project to better ensure support for Windows XP SP2
+* Added request for precise timer resolution via Windows Multimedia API
+
 ### 2020-06-10
 
 * Refactored code

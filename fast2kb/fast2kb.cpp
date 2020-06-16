@@ -899,6 +899,30 @@ int main()
 	INPUT diEvent = { 0 };
 	diEvent.type = INPUT_KEYBOARD;
 
+	// Determine the preferred timer resolution, within system capabilities.
+	DWORD preferredTimerResolution;
+	TIMECAPS timeCapabilities;
+	if (timeGetDevCaps(&timeCapabilities, sizeof(TIMECAPS)) != TIMERR_NOERROR)
+	{
+		preferredTimerResolution = POLLING_INTERVAL;
+	}
+	else
+	{
+		preferredTimerResolution = min(
+			max(timeCapabilities.wPeriodMin, POLLING_INTERVAL),
+			timeCapabilities.wPeriodMax);
+	}
+
+	// Ask the system to start using the preferred timer resolution.
+	if (timeBeginPeriod(preferredTimerResolution) != TIMERR_NOERROR)
+	{
+		LOG_VERBOSE("Timer resolution: Unknown\n");
+	}
+	else
+	{
+		LOG_VERBOSE("Timer resolution: %dms\n", preferredTimerResolution);
+	}
+
 	LOG_VERBOSE("Starting to poll input registers...\n");
 	while (keepPolling)
 	{
@@ -906,6 +930,9 @@ int main()
 		Sleep(POLLING_INTERVAL);
 	}
 	LOG_VERBOSE("Finished polling input registers\n");
+
+	// Ask the system to stop using the preferred timer resolution.
+	timeEndPeriod(preferredTimerResolution);
 
 	return 0;
 }
