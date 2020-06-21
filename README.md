@@ -15,7 +15,7 @@ For example, on a Windows-based arcade machine with a Fast I/O control system, `
   * Windows XP Embedded SP2
   * Windows 10 Pro, 32-bit
 * **Fast I/O DMAC board and drivers**: Tested successfully with:
-  * Taito Type X<sup>2</sup> PCIe board. (This device is manufactured by Oki Information Systems and is found in NESiCAxLive and Dariusburst versions of Taito Type X<sup>2</sup> arcade machines.) Device Manager was used to install a driver package containing `oem1.inf`, `iDmacDrv32.sys`, and `iDmacDrv32.dll`, all pulled from a working system.
+  * Taito Type X<sup>2</sup> PCIe board, K91X1209A J9100636A. (This device is manufactured by Oki Information Systems and is found in NESiCAxLive and Dariusburst versions of Taito Type X<sup>2</sup> arcade machines.) Device Manager was used to install a driver package containing `oem1.inf`, `iDmacDrv32.sys`, and `iDmacDrv32.dll`, all pulled from a working system.
 * **Fast I/O microcontroller board**: Taito boards with the designation J9100634A (having a JAMMA edge) or J9100633A (not having a JAMMA edge) are believed to be compatible. Tested successfully with:
   * Taito K91X1204B J9100634A board. Testing included inputs on JAMMA edge, as well as Button 6–8 inputs on 14-pin JST NH header.
 
