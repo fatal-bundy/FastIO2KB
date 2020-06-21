@@ -35,5 +35,8 @@
     <ClInclude Include="keymap_ppsspp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="keymap_verbose.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

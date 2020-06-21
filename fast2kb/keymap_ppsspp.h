@@ -69,13 +69,13 @@
 #define S_COIN1_FLAGS     KEYEVENTF_SCANCODE
 #define S_COIN2           DIK_6 // Unmapped
 #define S_COIN2_FLAGS     KEYEVENTF_SCANCODE
-#define S_TEST            DIK_7 // Unmapped
-#define S_TEST_FLAGS      KEYEVENTF_SCANCODE
-#define S_TILT            DIK_BACKSLASH // Unmapped
-#define S_TILT_FLAGS      KEYEVENTF_SCANCODE
+#define S_TEST1           DIK_7 // Unmapped
+#define S_TEST1_FLAGS     KEYEVENTF_SCANCODE
+#define S_TILT1           DIK_BACKSLASH // Unmapped
+#define S_TILT1_FLAGS     KEYEVENTF_SCANCODE
 #define S_SERVICE1        DIK_8 // Unmapped
 #define S_SERVICE1_FLAGS  KEYEVENTF_SCANCODE
 #define S_SERVICE2        DIK_9 // Unmapped
 #define S_SERVICE2_FLAGS  KEYEVENTF_SCANCODE
-#define S_ESC             DIK_0 // Unmapped
-#define S_ESC_FLAGS       KEYEVENTF_SCANCODE
+#define S_ESC1            DIK_0 // Unmapped
+#define S_ESC1_FLAGS      KEYEVENTF_SCANCODE

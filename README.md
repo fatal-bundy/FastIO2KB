@@ -13,15 +13,15 @@ For example, on a Windows-based arcade machine with a Fast I/O control system, `
 
 * **Operating system:** Windows XP or later. Tested successfully with:
   * Windows XP Embedded SP2
-* **Drivers:** `iDmacDrv32.dll`. Depending on how your environment is configured, you might need to copy `iDmacDrv32.dll` into the same directory as `fast2kb.exe`.
-* **Fast I/O DMAC board**: Needs to be compatible with your version of `iDmacDrv32.dll`. Tested successfully with:
-  * Taito Type X<sup>2</sup> PCIe board (as found in NESiCAxLive and Dariusburst versions of Taito Type X<sup>2</sup>)
-* **Fast I/O microcontroller board**: Tested successfully with:
-  * Taito K91X1204B board. Supports JAMMA to Fast I/O.
+  * Windows 10 Pro, 32-bit
+* **Fast I/O DMAC board and drivers**: Tested successfully with:
+  * Taito Type X<sup>2</sup> PCIe board. (This device is manufactured by Oki Information Systems and is found in NESiCAxLive and Dariusburst versions of Taito Type X<sup>2</sup> arcade machines.) Device Manager was used to install a driver package containing `oem1.inf`, `iDmacDrv32.sys`, and `iDmacDrv32.dll`, all pulled from a working system.
+* **Fast I/O microcontroller board**: Taito boards with the designation J9100634A (having a JAMMA edge) or J9100633A (not having a JAMMA edge) are believed to be compatible. Tested successfully with:
+  * Taito K91X1204B J9100634A board. Testing included inputs on JAMMA edge, as well as Button 6–8 inputs on 14-pin JST NH header.
 
 ## Troubleshooting
 
-* Copy `iDmacDrv32.dll` (a version that is compatible with your Fast I/O DMAC board) into the same directory as `fast2b.exe`.
+* Depending on how your environment is configured, you might need to copy a compatible version of `iDmacDrv32.dll` into the same directory as `fast2kb.exe`.
 
 ## Build Configurations and Keymaps
 
@@ -58,16 +58,40 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 | Player 2 Button 2                    | S                    | Player 2 Button 2       |
 | Player 2 Button 3                    | Q                    | Player 2 Button 3       |
 | Player 2 Button 4                    | W                    | Player 2 Button 4       |
-| Player 2 Button 5                    | K                    | *Unmapped*              |
-| Player 2 Button 6                    | L                    | *Unmapped*              |
-| Player 2 Button 7                    | I                    | *Unmapped*              |
-| Player 2 Button 8                    | O                    | *Unmapped*              |
+| Player 2 Button 5                    | E                    | *Unmapped*              |
+| Player 2 Button 6                    | Y                    | *Unmapped*              |
+| Player 2 Button 7                    | H                    | *Unmapped*              |
+| Player 2 Button 8                    | U                    | *Unmapped*              |
+| Player 3 Start                       | 3                    | Player 3 Start          |
+| Player 3 Up                          | I                    | Player 3 Up             |
+| Player 3 Down                        | K                    | Player 3 Down           |
+| Player 3 Left                        | J                    | Player 3 Left           |
+| Player 3 Right                       | L                    | Player 3 Right          |
+| Player 3 Button 1                    | Right Ctrl           | Player 3 Button 1       |
+| Player 3 Button 2                    | Right Shift          | Player 3 Button 2       |
+| Player 3 Button 3                    | Enter                | Player 3 Button 3       |
+| Player 3 Button 4                    | Right Alt            | *Unmapped*              |
+| Player 4 Start                       | 4                    | Player 4 Start          |
+| Player 4 Up                          | Numpad 8             | Player 4 Up             |
+| Player 4 Down                        | Numpad 2             | Player 4 Down           |
+| Player 4 Left                        | Numpad 4             | Player 4 Left           |
+| Player 4 Right                       | Numpad 6             | Player 4 Right          |
+| Player 4 Button 1                    | Numpad 0             | Player 4 Button 1       |
+| Player 4 Button 2                    | Numpad .             | Player 4 Button 2       |
+| Player 4 Button 3                    | Numpad Enter         | Player 4 Button 3       |
+| Player 4 Button 4                    | Numpad +             | *Unmapped*              |
 | Coin 1                               | 5                    | Coin 1                  |
 | Coin 2                               | 6                    | Coin 2                  |
-| Test                                 | F2                   | Test                    |
-| Tilt                                 | T                    | Tilt                    |
+| Coin 3                               | 7                    | Coin 3                  |
+| Coin 4                               | 8                    | Coin 4                  |
+| Test 1                               | F2                   | Test                    |
+| Test 2                               | F2                   | Test                    |
+| Tilt 1                               | T                    | Tilt                    |
+| Tilt 2                               | T                    | Tilt                    |
 | Service 1                            | 9                    | Service 1               |
 | Service 2                            | 0                    | Service 2               |
+| Service 3                            | -                    | Service 3, Volume Down  |
+| Service 4                            | =                    | Service 4, Volume Up    |
 | Player 1 Start + Button 1 + Button 3 | Esc                  | Exit                    |
 
 ### PPSSPP Keymap
@@ -102,8 +126,8 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 | Player 2 Button 8                    | ]                      | *Unmapped*                |
 | Coin 1                               | \`                     | Speed Toggle              |
 | Coin 2                               | 6                      | *Unmapped*                |
-| Test                                 | 7                      | *Unmapped*                |
-| Tilt                                 | \                      | *Unmapped*                |
+| Test 1                               | 7                      | *Unmapped*                |
+| Tilt 1                               | \                      | *Unmapped*                |
 | Service 1                            | 8                      | *Unmapped*                |
 | Service 2                            | 9                      | *Unmapped*                |
 | Player 1 Start + Button 1 + Button 3 | 0                      | *Unmapped*                |
@@ -111,16 +135,27 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 ## To-do
 
 * Consider batching input events into fewer SendInput calls
-* Add support for Players 3&4
-* Test compatibility with other Windows versions
+* Add 64-bit project configurations. Add support for 64-bit drivers. Test compatibility with Windows 10 Pro, 64-bit.
 * Test compatibility with other Fast I/O DMAC boards, including:
   * Taito Type X<sup>3</sup> PCIe board
 * Test compatibility with other Fast I/O microcontroller boards, including:
-  * Taito K91X1204A board. Supports JAMMA to Fast I/O.
-  * Taito K91X1243C board
+  * Taito K91X1243A J9100633A board
 * Consider adding fallback to JVS in case where Fast I/O is unavailable
 
 ## Changelog
+
+### 2020-06-21
+
+* Refactored code
+* Added support for the following inputs:
+  * Player 3 Start, Up, Down, Left, Right, Buttons 1–8
+  * Player 4 Start, Up, Down, Left, Right, Buttons 1–8
+  * Coins 3&4, Test 2, Tilt 2, Service 3&4
+  * Escape 2 sequence: Player 2 Start + Button 1 + Button 3
+  * Escape 3 sequence: Player 3 Start + Button 1 + Button 3
+  * Escape 4 sequence: Player 4 Start + Button 1 + Button 3
+* Enhanced MAME keymap to support Players 3&4
+* Added early return in case where no I/O connection is detected
 
 ### 2020-06-16
 
