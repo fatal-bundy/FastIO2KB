@@ -15,13 +15,14 @@ For example, on a Windows-based arcade machine with a Fast I/O control system, `
   * Windows XP Embedded SP2
   * Windows 10 Pro, 32-bit
 * **Fast I/O DMAC board and drivers**: Tested successfully with:
-  * Taito Type X<sup>2</sup> PCIe board, K91X1209A J9100636A. (This device is manufactured by Oki Information Systems and is found in NESiCAxLive and Dariusburst versions of Taito Type X<sup>2</sup> arcade machines.) Device Manager was used to install a driver package containing `oem1.inf`, `iDmacDrv32.sys`, and `iDmacDrv32.dll`, all pulled from a working system.
+  * Taito Type X<sup>2</sup> PCIe board (K91X1209A J9100636A). This device is manufactured by Oki Information Systems and is found in NESiCAxLive and Dariusburst versions of Taito Type X<sup>2</sup> arcade machines. Device Manager was used to install a driver package containing `oem1.inf`, `iDmacDrv32.sys`, and `iDmacDrv32.dll`, all pulled from a working system.
 * **Fast I/O microcontroller board**: Taito boards with the designation J9100634A (having a JAMMA edge) or J9100633A (not having a JAMMA edge) are believed to be compatible. Tested successfully with:
   * Taito K91X1204B J9100634A board. Testing included inputs on JAMMA edge, as well as Button 6–8 inputs on 14-pin JST NH header.
 
 ## Troubleshooting
 
 * Depending on how your environment is configured, you might need to copy a compatible version of `iDmacDrv32.dll` into the same directory as `fast2kb.exe`.
+* If a COM2 port is present on your system, ensure that it is either unused or connected to a JVS board. If `fast2b.exe` is able to open COM2, it assumes that COM2 is connected to a JVS board.
 
 ## Build Configurations and Keymaps
 
@@ -137,12 +138,17 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 * Consider batching input events into fewer SendInput calls
 * Add 64-bit project configurations. Add support for 64-bit drivers. Test compatibility with Windows 10 Pro, 64-bit.
 * Test compatibility with other Fast I/O DMAC boards, including:
-  * Taito Type X<sup>3</sup> PCIe board
+  * Taito Type X<sup>3</sup> PCIe board (K91X1217C J9100638A) + connector board (K92X0281C J9200167C)
 * Test compatibility with other Fast I/O microcontroller boards, including:
   * Taito K91X1243A J9100633A board
 * Consider adding fallback to JVS in case where Fast I/O is unavailable
 
 ## Changelog
+
+### 2020-07-11
+
+* Fixed undesirable power-cycling behaviour on Taito Type X<sup>2</sup> and similar systems, where a JVS board is connected to COM2. The fix entails periodically sending a JVS Reset message to COM2, to prevent timeout of the JVS board's watchdog timer. If `fastio2kb.exe` cannot open COM2 (e.g. if the system has no COM2 port or if another process already has an open connection to COM2), then `fastio2kb.exe` proceeds without COM2 communications. On the other hand, if `fastio2kb.exe` can open COM2 but COM2 is connected to some device other than a JVS board, then the connected device could malfunction due to incompatible communications.
+* Clarified log messages about Fast I/O ports
 
 ### 2020-06-21
 
