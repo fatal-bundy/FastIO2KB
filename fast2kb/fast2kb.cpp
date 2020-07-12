@@ -10,8 +10,16 @@
 
 
 
+#define STATUS_SUCCESS 0 // NTSTATUS value for success
+
+
+#ifdef KEYMAP_PPSSPP
+// PPSSPP's menu screens cannot handle input at submillisecond interval.
 #define POLLING_INTERVAL 1ul // milliseconds
-#define POLLING_INTERVAL_RESOLUTION 1ul // milliseconds
+#else
+#define POLLING_INTERVAL 0ul // milliseconds
+#endif
+#define POLLING_INTERVAL_RESOLUTION 5000ul // 10000 == 1 millisecond
 
 
 #define JVS_FRIENDLY
@@ -147,6 +155,19 @@ struct FIOKEYS
     int k4esc_flag;
 };
 
+
+
+typedef NTSTATUS(__stdcall *ntQueryTimerRes)(PULONG MinimumResolution,
+    PULONG MaximumResolution, PULONG CurrentResolution);
+typedef NTSTATUS(__stdcall *ntSetTimerRes)(ULONG DesiredResolution,
+    BOOLEAN SetResolution, PULONG CurrentResolution);
+
+HMODULE ntdll = LoadLibrary(TEXT("ntdll.dll"));
+
+ntQueryTimerRes NtQueryTimerResolution = (ntQueryTimerRes)GetProcAddress(
+    ntdll, "NtQueryTimerResolution");
+ntSetTimerRes NtSetTimerResolution = (ntSetTimerRes)GetProcAddress(
+    ntdll, "NtSetTimerResolution");
 
 
 typedef int(*dmacOpen)(int, LPVOID, LPVOID);
@@ -2081,27 +2102,32 @@ int main()
     diEvent.type = INPUT_KEYBOARD;
 
     // Determine the preferred timer resolution, within system capabilities.
-    DWORD preferredTimerResolution;
-    TIMECAPS timeCapabilities;
-    if (timeGetDevCaps(&timeCapabilities, sizeof(TIMECAPS)) != TIMERR_NOERROR)
+    ULONG minTimerResolution; // Highest possible delay
+    ULONG maxTimerResolution; // Lowest possible delay
+    ULONG currentTimerResolution;
+    ULONG preferredTimerResolution;
+    if (NtQueryTimerResolution(&minTimerResolution, &maxTimerResolution,
+            &currentTimerResolution) != STATUS_SUCCESS)
     {
         preferredTimerResolution = POLLING_INTERVAL_RESOLUTION;
     }
     else
     {
         preferredTimerResolution = min(
-            max(timeCapabilities.wPeriodMin, POLLING_INTERVAL_RESOLUTION),
-            timeCapabilities.wPeriodMax);
+            max(maxTimerResolution, POLLING_INTERVAL_RESOLUTION),
+            minTimerResolution);
     }
 
     // Ask the system to start using the preferred timer resolution.
-    if (timeBeginPeriod(preferredTimerResolution) != TIMERR_NOERROR)
+    if (NtSetTimerResolution(preferredTimerResolution, TRUE,
+            &currentTimerResolution) != STATUS_SUCCESS)
     {
         LOG_VERBOSE("Timer resolution: Unknown\n");
     }
     else
     {
-        LOG_VERBOSE("Timer resolution: %dms\n", preferredTimerResolution);
+        LOG_VERBOSE("Timer resolution: %.4fms\n",
+            preferredTimerResolution * 0.0001);
     }
 
     LOG_VERBOSE("Starting to poll input registers...\n");
@@ -2138,7 +2164,8 @@ int main()
 #endif // JVS_FRIENDLY
 
     // Ask the system to stop using the preferred timer resolution.
-    timeEndPeriod(preferredTimerResolution);
+    NtSetTimerResolution(preferredTimerResolution, FALSE,
+        &currentTimerResolution);
 
     return 0;
 }

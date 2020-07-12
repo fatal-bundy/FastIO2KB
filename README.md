@@ -145,6 +145,12 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 
 ## Changelog
 
+### 2020-07-12
+
+* Added support for submillisecond timings:
+  * MAME configuration: Try polling at submillisecond interval (nominally, 0ms) with 0.5ms precision
+  * PPSSPP configuration: Try polling at 1ms interval with 0.5ms precision. (PPSSPP's menu screens cannot handle input at submillisecond interval.)
+
 ### 2020-07-11
 
 * Fixed undesirable power-cycling behaviour on Taito Type X<sup>2</sup> and similar systems, where a JVS board is connected to COM2. The fix entails periodically sending a JVS Reset message to COM2, to prevent timeout of the JVS board's watchdog timer. If `fastio2kb.exe` cannot open COM2 (e.g. if the system has no COM2 port or if another process already has an open connection to COM2), then `fastio2kb.exe` proceeds without COM2 communications. On the other hand, if `fastio2kb.exe` can open COM2 but COM2 is connected to some device other than a JVS board, then the connected device could malfunction due to incompatible communications.
