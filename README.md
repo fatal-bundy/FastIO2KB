@@ -1,6 +1,6 @@
 # FastIO2KB
 
-This repository contains source code for a Windows console application, `fast2kb.exe`, which reads input via `iDmacDrv32.dll` from a Fast I/O Direct Memory Access Controller (DMAC) and remaps this input to DirectInput keyboard events. Any DirectInput-compatible application can receive the remapped input.
+This repository contains source code for a Windows console application, `fast2kb.exe`, which reads input via `iDmacDrv32.dll` or `iDmacDrv64.dll` from a Fast I/O Direct Memory Access Controller (DMAC) and remaps this input to DirectInput keyboard events. Any DirectInput-compatible application can receive the remapped input.
 
 For example, on a Windows-based arcade machine with a Fast I/O control system, `fast2kb.exe` can serve input to a DirectInput-compatible emulator such as MAME or PPSSPP.
 
@@ -14,14 +14,16 @@ For example, on a Windows-based arcade machine with a Fast I/O control system, `
 * **Operating system:** Windows XP or later. Tested successfully with:
   * Windows XP Embedded SP2
   * Windows 10 Pro, 32-bit
+  * Windows 10 Pro, 64-bit
 * **Fast I/O DMAC board and drivers**: Tested successfully with:
   * Taito Type X<sup>2</sup> PCIe board (K91X1209A J9100636A). This device is manufactured by Oki Information Systems and is found in NESiCAxLive and Dariusburst versions of Taito Type X<sup>2</sup> arcade machines. Device Manager was used to install a driver package containing `oem1.inf`, `iDmacDrv32.sys`, and `iDmacDrv32.dll`, all pulled from a working system.
+  * Taito Type X<sup>3</sup> PCIe board (K91X1217C J9100638A) + connector board (K92X0281C J9200167C). This device is manufactured by Oki Information Systems and is found in Taito Type X<sup>3</sup> arcade machines. Device Manager was used to install a driver package containing `idmacdrv64.inf`, `iDmacDrv64.sys`, and `iDmacDrv64.dll`, `iDmacDrv64.cat`, and `idmacdrv64.PNF`, all pulled from a working system.
 * **Fast I/O microcontroller board**: Taito boards with the designation J9100634A (having a JAMMA edge) or J9100633A (not having a JAMMA edge) are believed to be compatible. Tested successfully with:
   * Taito K91X1204B J9100634A board. Testing included inputs on JAMMA edge, as well as Button 6–8 inputs on 14-pin JST NH header.
 
 ## Troubleshooting
 
-* Depending on how your environment is configured, you might need to copy a compatible version of `iDmacDrv32.dll` into the same directory as `fast2kb.exe`.
+* Depending on how your environment is configured, you might need to copy a compatible version of `iDmacDrv32.dll` or `iDmacDrv64.dll` into the same directory as `fast2kb.exe`.
 * If a COM2 port is present on your system, ensure that it is either unused or connected to a JVS board. If `fast2b.exe` is able to open COM2, it assumes that COM2 is connected to a JVS board.
 
 ## Build Configurations and Keymaps
@@ -136,14 +138,15 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 ## To-do
 
 * Consider batching input events into fewer SendInput calls
-* Add 64-bit project configurations. Add support for 64-bit drivers. Test compatibility with Windows 10 Pro, 64-bit.
-* Test compatibility with other Fast I/O DMAC boards, including:
-  * Taito Type X<sup>3</sup> PCIe board (K91X1217C J9100638A) + connector board (K92X0281C J9200167C)
 * Test compatibility with other Fast I/O microcontroller boards, including:
   * Taito K91X1243A J9100633A board
 * Consider adding fallback to JVS in case where Fast I/O is unavailable
 
 ## Changelog
+
+### 2020-07-27
+
+* Added 64-bit project configurations that use 64-bit drivers
 
 ### 2020-07-12
 

@@ -175,7 +175,11 @@ typedef int(*dmacRead)(int, DWORD, LPVOID, LPVOID);
 typedef int(*dmacWrite)(int, DWORD, int, LPVOID);
 typedef int(*dmacClose)(int, LPVOID);
 
+#ifdef _WIN64
+HMODULE dmacdll = LoadLibrary(TEXT("iDmacDrv64.dll"));
+#else
 HMODULE dmacdll = LoadLibrary(TEXT("iDmacDrv32.dll"));
+#endif
 
 dmacOpen iDmacDrvOpen = (dmacOpen)GetProcAddress(dmacdll, "iDmacDrvOpen");
 dmacRead iDmacDrvRegisterRead = (dmacRead)GetProcAddress(dmacdll, "iDmacDrvRegisterRead");

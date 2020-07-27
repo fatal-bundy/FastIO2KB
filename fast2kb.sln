@@ -8,19 +8,31 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		MAME_Debug|Win32 = MAME_Debug|Win32
+		MAME_Debug|x64 = MAME_Debug|x64
 		MAME_Release|Win32 = MAME_Release|Win32
+		MAME_Release|x64 = MAME_Release|x64
 		PPSSPP_Debug|Win32 = PPSSPP_Debug|Win32
+		PPSSPP_Debug|x64 = PPSSPP_Debug|x64
 		PPSSPP_Release|Win32 = PPSSPP_Release|Win32
+		PPSSPP_Release|x64 = PPSSPP_Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Debug|Win32.ActiveCfg = MAME_Debug|Win32
 		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Debug|Win32.Build.0 = MAME_Debug|Win32
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Debug|x64.ActiveCfg = MAME_Debug|x64
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Debug|x64.Build.0 = MAME_Debug|x64
 		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Release|Win32.ActiveCfg = MAME_Release|Win32
 		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Release|Win32.Build.0 = MAME_Release|Win32
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Release|x64.ActiveCfg = MAME_Release|x64
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Release|x64.Build.0 = MAME_Release|x64
 		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Debug|Win32.ActiveCfg = PPSSPP_Debug|Win32
 		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Debug|Win32.Build.0 = PPSSPP_Debug|Win32
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Debug|x64.ActiveCfg = PPSSPP_Debug|x64
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Debug|x64.Build.0 = PPSSPP_Debug|x64
 		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Release|Win32.ActiveCfg = PPSSPP_Release|Win32
 		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Release|Win32.Build.0 = PPSSPP_Release|Win32
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Release|x64.ActiveCfg = PPSSPP_Release|x64
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Release|x64.Build.0 = PPSSPP_Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
