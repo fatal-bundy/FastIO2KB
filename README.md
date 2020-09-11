@@ -20,6 +20,7 @@ For example, on a Windows-based arcade machine with a Fast I/O control system, `
   * Taito Type X<sup>3</sup> PCIe board (K91X1217C J9100638A) + connector board (K92X0281C J9200167C). This device is manufactured by Oki Information Systems and is found in Taito Type X<sup>3</sup> arcade machines. Device Manager was used to install a driver package containing `idmacdrv64.inf`, `iDmacDrv64.sys`, and `iDmacDrv64.dll`, `iDmacDrv64.cat`, and `idmacdrv64.PNF`, all pulled from a working system.
 * **Fast I/O microcontroller board**: Taito boards with the designation J9100634A (having a JAMMA edge) or J9100633A (not having a JAMMA edge) are believed to be compatible. Tested successfully with:
   * Taito K91X1204B J9100634A board. Testing included inputs on JAMMA edge, as well as Button 6–8 inputs on 14-pin JST NH header (labelled "B"). All work.
+  * Taito K91X1202A J9100633A board. Testing included inputs on 60-pin JST RA header (labelled "G1"). All work.
   * Taito K91X1243A J9100633A board. Testing included inputs on 60-pin JST RA header (labelled "G1"). Button 5–8 inputs do not work; others do work.
 
 ## Troubleshooting
@@ -139,8 +140,8 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 ## To-do
 
 * Test compatibility with other Fast I/O microcontroller boards, including:
-  * Taito K91X1202A J9100633A board
-  * Taito K91X1252A J9100633A board. Reportedly, Button 5–8 inputs work on this board (unlike the Taito K91X1243A J9100633A board).
+  * Taito K91X1234A J9100633A board
+  * Taito K91X1252A J9100633A board
 * Consider adding fallback to JVS in case where Fast I/O is unavailable
 
 ## Changelog
