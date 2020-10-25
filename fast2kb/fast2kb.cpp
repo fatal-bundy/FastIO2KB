@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #ifdef KEYMAP_PPSSPP
 #include "keymap_ppsspp.h"
+#elif KEYMAP_EX_BOARD
+#include "keymap_ex_board.h"
 #else
 #include "keymap_mame.h"
 #endif // KEYMAP_PPSSPP
@@ -18,7 +20,7 @@
 #define POLLING_INTERVAL 1ul // milliseconds
 #else
 #define POLLING_INTERVAL 0ul // milliseconds
-#endif
+#endif // KEYMAP_PPSSPP
 #define POLLING_INTERVAL_RESOLUTION 5000ul // 10000 == 1 millisecond
 
 

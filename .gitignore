@@ -2,6 +2,8 @@
 .DS_Store
 
 # Build results
+eX-BOARD_Debug/
+eX-BOARD_Release/
 MAME_Debug/
 MAME_Release/
 PPSSPP_Debug/

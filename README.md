@@ -34,6 +34,7 @@ The project has different build configurations for different keymaps:
 
 * **MAME:** This configuration works well with the default keyboard controls in MAME (an arcade machine emulator).
 * **PPSSPP:** This configuration works well with the default keyboard controls in PPSSPP (a PSP emulator). Because the PSP has many inputs and just one player, the keymap combines Fast I/O's Player 1 and 2 inputs to support just one PSP player.
+* **eX-BOARD and Deathsmiles II:** This configuration works well with the keyboard controls in games for the eX-BOARD arcade system. Also, it works well with the keyboard controls in Deathsmiles II (the only game for the CAVE PC arcade system).
 
 The following tables show the keymaps from Fast I/O inputs to keyboard inputs and from keyboard inputs to emulated controls in MAME or PPSSPP.
 
@@ -137,6 +138,35 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 | Service 2                            | 9                      | *Unmapped*                |
 | Player 1 Start + Button 1 + Button 3 | 0                      | *Unmapped*                |
 
+### eX-BOARD and Deathsmiles II Keymap
+
+| Fast I/O Input                       | Key Received by Game | Mapping in Game                   |
+| ------------------------------------ | -------------------- | --------------------------------- |
+| Player 1 Start                       | W                    | Player 1 Start                    |
+| Player 1 Up                          | Up                   | Player 1 Up                       |
+| Player 1 Down                        | Down                 | Player 1 Down                     |
+| Player 1 Left                        | Left                 | Player 1 Left                     |
+| Player 1 Right                       | Right                | Player 1 Right                    |
+| Player 1 Button 1                    | Z                    | Player 1 Button 1                 |
+| Player 1 Button 2                    | X                    | Player 1 Button 2                 |
+| Player 1 Button 3                    | C                    | Player 1 Button 3                 |
+| Player 1 Button 4                    | V                    | Player 1 Button 4 (eX-BOARD only) |
+| Player 1 Button 5                    | N                    | Player 1 Button 5 (eX-BOARD only) |
+| Player 2 Start                       | E                    | Player 2 Start                    |
+| Player 2 Up                          | Numpad 8             | Player 2 Up                       |
+| Player 2 Down                        | Numpad 2             | Player 2 Down                     |
+| Player 2 Left                        | Numpad 4             | Player 2 Left                     |
+| Player 2 Right                       | Numpad 6             | Player 2 Right                    |
+| Player 2 Button 1                    | A                    | Player 2 Button 1                 |
+| Player 2 Button 2                    | S                    | Player 2 Button 2                 |
+| Player 2 Button 3                    | D                    | Player 2 Button 3                 |
+| Player 2 Button 4                    | F                    | Player 2 Button 4 (eX-BOARD only) |
+| Player 2 Button 5                    | T                    | Player 2 Button 5 (eX-BOARD only) |
+| Coin 1                               | K                    | Coin 1                            |
+| Coin 2                               | J                    | Coin 2                            |
+| Test 1                               | H                    | Test (eX-BOARD only)              |
+| Player 1 Start + Button 1 + Button 3 | Esc                  | Exit (Deathsmiles II only)        |
+
 ## To-do
 
 * Test compatibility with other Fast I/O microcontroller boards, including:
@@ -145,6 +175,10 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 * Consider adding fallback to JVS in case where Fast I/O is unavailable
 
 ## Changelog
+
+### 2020-10-25
+
+* Added keymap and build configuration for eX-BOARD, as well as Deathsmiles II (one keymap and build configuration for both). Polling is attempted at submillisecond interval (nominally, 0ms) with 0.5ms precision.
 
 ### 2020-07-27
 
