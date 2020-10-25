@@ -36,7 +36,7 @@ The project has different build configurations for different keymaps:
 * **PPSSPP:** This configuration works well with the default keyboard controls in PPSSPP (a PSP emulator). Because the PSP has many inputs and just one player, the keymap combines Fast I/O's Player 1 and 2 inputs to support just one PSP player.
 * **eX-BOARD and Deathsmiles II:** This configuration works well with the keyboard controls in games for the eX-BOARD arcade system. Also, it works well with the keyboard controls in Deathsmiles II (the only game for the CAVE PC arcade system).
 
-The following tables show the keymaps from Fast I/O inputs to keyboard inputs and from keyboard inputs to emulated controls in MAME or PPSSPP.
+The following tables show the keymaps from Fast I/O inputs to keyboard inputs and from keyboard inputs to emulated controls in MAME, PPSSPP, eX-BOARD games, or Deathsmiles II.
 
 ### MAME Keymap
 
