@@ -176,6 +176,10 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 
 ## Changelog
 
+### 2020-12-14
+
+* Optimized cases where none of button states have changed
+
 ### 2020-10-25
 
 * Added keymap and build configuration for eX-BOARD, as well as Deathsmiles II (one keymap and build configuration for both). Polling is attempted at submillisecond interval (nominally, 0ms) with 0.5ms precision.

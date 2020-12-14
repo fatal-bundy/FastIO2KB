@@ -452,17 +452,19 @@ BOOL assignPlayers()
 }
 
 
-void pollP1P2(FIOKEYS &fioKeys, INPUT &diEvent)
+void pollP1P2(int &buttonsData, FIOKEYS &fioKeys, INPUT &diEvent)
 {
-    int buttonsData;
-    if (!FIO_RegRead(buttonsAddressP1P2, buttonsData))
     {
-        return;
+        int nextButtonsData;
+        if (!FIO_RegRead(buttonsAddressP1P2, nextButtonsData) ||
+            buttonsData == nextButtonsData)
+        {
+            // The read failed or none of the button states have changed.
+            return;
+        }
+        buttonsData = nextButtonsData;
     }
-    if (buttonsData != 0x0)
-    {
-        LOG_VERBOSE("pollP1P2: buttonsData=0x%x\n", buttonsData);
-    }
+    LOG_VERBOSE("pollP1P2: buttonsData=0x%x\n", buttonsData);
 
 #ifdef S_ESC1
     // Player 1 Start + Player 1 Button 1 + Player 1 Button 3
@@ -1249,17 +1251,19 @@ void pollP1P2(FIOKEYS &fioKeys, INPUT &diEvent)
 
 
 #ifdef P3P4_ENABLED
-void pollP3P4(FIOKEYS &fioKeys, INPUT &diEvent)
+void pollP3P4(int &buttonsData, FIOKEYS &fioKeys, INPUT &diEvent)
 {
-    int buttonsData;
-    if (!FIO_RegRead(buttonsAddressP3P4, buttonsData))
     {
-        return;
+        int nextButtonsData;
+        if (!FIO_RegRead(buttonsAddressP3P4, nextButtonsData) ||
+            buttonsData == nextButtonsData)
+        {
+            // The read failed or none of the button states have changed.
+            return;
+        }
+        buttonsData = nextButtonsData;
     }
-    if (buttonsData != 0x0)
-    {
-        LOG_VERBOSE("pollP3P4: buttonsData=0x%x\n", buttonsData);
-    }
+    LOG_VERBOSE("pollP3P4: buttonsData=0x%x\n", buttonsData);
 
 #ifdef S_ESC3
     // Player 3 Start + Player 3 Button 1 + Player 3 Button 3
@@ -2102,6 +2106,11 @@ int main()
     }
 #endif // JVS_FRIENDLY
 
+    int buttonsDataP1P2 = 0x0;
+#ifdef P3P4_ENABLED
+    int buttonsDataP3P4 = 0x0;
+#endif
+
     FIOKEYS fioKeys = { 0 };
 
     INPUT diEvent = { 0 };
@@ -2141,7 +2150,7 @@ int main()
     {
         while (keepPolling)
         {
-            pollP1P2(fioKeys, diEvent);
+            pollP1P2(buttonsDataP1P2, fioKeys, diEvent);
             Sleep(POLLING_INTERVAL);
         }
     }
@@ -2149,9 +2158,9 @@ int main()
     {
         while (keepPolling)
         {
-            pollP1P2(fioKeys, diEvent);
+            pollP1P2(buttonsDataP1P2, fioKeys, diEvent);
 #ifdef P3P4_ENABLED
-            pollP3P4(fioKeys, diEvent);
+            pollP3P4(buttonsDataP3P4, fioKeys, diEvent);
 #endif // P3P4_ENABLED
             Sleep(POLLING_INTERVAL);
         }
