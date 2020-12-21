@@ -176,6 +176,10 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 
 ## Changelog
 
+### 2020-12-21
+
+* Refactored and optimized model of button states
+
 ### 2020-12-14
 
 * Optimized cases where none of button states have changed
