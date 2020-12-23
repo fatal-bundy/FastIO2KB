@@ -6,6 +6,9 @@
 
 
 
+#define KEYMAP_DESCRIPTION "MAME"
+
+
 // Player 1
 #define P1_START          DIK_1
 #define P1_START_FLAGS    KEYEVENTF_SCANCODE

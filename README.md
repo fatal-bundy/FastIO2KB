@@ -176,9 +176,15 @@ The following tables show the keymaps from Fast I/O inputs to keyboard inputs an
 
 ## Changelog
 
+### 2020-12-23
+
+* Added error messages and graceful exit for cases where DLLs are missing or incompatible
+* Added support for command line flag ("/?" or "/h") to show build info
+
 ### 2020-12-21
 
 * Refactored and optimized model of button states
+* Corrected log messages about Player 2&4 Button 5 release
 
 ### 2020-12-14
 

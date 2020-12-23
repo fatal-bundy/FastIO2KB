@@ -12,6 +12,21 @@
 
 
 
+#define VERSION_DESCRIPTION "2020.12.23.00"
+
+#ifdef _WIN64
+#define ARCHITECTURE_DESCRIPTION "x64"
+#else
+#define ARCHITECTURE_DESCRIPTION "x86"
+#endif
+
+#ifdef _DEBUG
+#define PROFILE_DESCRIPTION "Debug"
+#else
+#define PROFILE_DESCRIPTION "Release"
+#endif
+
+
 #define STATUS_SUCCESS 0 // NTSTATUS value for success
 
 
@@ -39,10 +54,13 @@
 #ifdef VERBOSE
 #include "keymap_verbose.h"
 #define LOG_VERBOSE(...) (fprintf_s(stdout, __VA_ARGS__))
+#define LOG_LEVEL_DESCRIPTION "Verbose"
 #else
 #define LOG_VERBOSE(...)
+#define LOG_LEVEL_DESCRIPTION "Default"
 #endif // VERBOSE
 
+#define LOG_INFO(...) (fprintf_s(stdout, __VA_ARGS__))
 #define LOG_ERROR(...) (fprintf_s(stderr, __VA_ARGS__))
 
 
@@ -90,12 +108,10 @@ typedef NTSTATUS(__stdcall *ntQueryTimerRes)(PULONG MinimumResolution,
 typedef NTSTATUS(__stdcall *ntSetTimerRes)(ULONG DesiredResolution,
     BOOLEAN SetResolution, PULONG CurrentResolution);
 
-HMODULE ntdll = LoadLibrary(TEXT("ntdll.dll"));
+HMODULE ntdll;
 
-ntQueryTimerRes NtQueryTimerResolution = (ntQueryTimerRes)GetProcAddress(
-    ntdll, "NtQueryTimerResolution");
-ntSetTimerRes NtSetTimerResolution = (ntSetTimerRes)GetProcAddress(
-    ntdll, "NtSetTimerResolution");
+ntQueryTimerRes NtQueryTimerResolution;
+ntSetTimerRes NtSetTimerResolution;
 
 
 typedef int(*dmacOpen)(int, LPVOID, LPVOID);
@@ -103,16 +119,12 @@ typedef int(*dmacRead)(int, DWORD, LPVOID, LPVOID);
 typedef int(*dmacWrite)(int, DWORD, int, LPVOID);
 typedef int(*dmacClose)(int, LPVOID);
 
-#ifdef _WIN64
-HMODULE dmacdll = LoadLibrary(TEXT("iDmacDrv64.dll"));
-#else
-HMODULE dmacdll = LoadLibrary(TEXT("iDmacDrv32.dll"));
-#endif
+HMODULE iDmacDrv;
 
-dmacOpen iDmacDrvOpen = (dmacOpen)GetProcAddress(dmacdll, "iDmacDrvOpen");
-dmacRead iDmacDrvRegisterRead = (dmacRead)GetProcAddress(dmacdll, "iDmacDrvRegisterRead");
-dmacWrite iDmacDrvRegisterWrite = (dmacWrite)GetProcAddress(dmacdll, "iDmacDrvRegisterWrite");
-dmacClose iDmacDrvClose = (dmacClose)GetProcAddress(dmacdll, "iDmacDrvClose");
+dmacOpen iDmacDrvOpen;
+dmacRead iDmacDrvRegisterRead;
+dmacWrite iDmacDrvRegisterWrite;
+dmacClose iDmacDrvClose;
 
 
 int deviceIndex = 1;
@@ -123,6 +135,85 @@ int buttonsAddressP3P4;
 HANDLE hMainThread;
 BOOL keepPolling = TRUE;
 
+
+
+BOOL loadNtdll()
+{
+    ntdll = LoadLibrary(TEXT("ntdll.dll"));
+    if (ntdll == NULL)
+    {
+        LOG_ERROR("Failed to load ntdll.dll. Error code: %d\n", GetLastError());
+        return FALSE;
+    }
+
+    NtQueryTimerResolution = (ntQueryTimerRes)GetProcAddress(
+        ntdll, "NtQueryTimerResolution");
+    if (NtQueryTimerResolution == NULL)
+    {
+        LOG_ERROR("Failed to get address of NtQueryTimerResolution. Error code: %d\n", GetLastError());
+        return FALSE;
+    }
+
+    NtSetTimerResolution = (ntSetTimerRes)GetProcAddress(
+        ntdll, "NtSetTimerResolution");
+    if (NtSetTimerResolution == NULL)
+    {
+        LOG_ERROR("Failed to get address of NtSetTimerResolution. Error code: %d\n", GetLastError());
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+BOOL loadIDmacDrv()
+{
+#ifdef _WIN64
+    iDmacDrv = LoadLibrary(TEXT("iDmacDrv64.dll"));
+    if (iDmacDrv == NULL)
+    {
+        LOG_ERROR("Failed to load iDmacDrv64.dll. Error code: %d\n", GetLastError());
+        return FALSE;
+    }
+#else
+    iDmacDrv = LoadLibrary(TEXT("iDmacDrv32.dll"));
+    if (iDmacDrv == NULL)
+    {
+        LOG_ERROR("Failed to load iDmacDrv32.dll. Error code: %d\n", GetLastError());
+        return FALSE;
+    }
+#endif
+
+    iDmacDrvOpen = (dmacOpen)GetProcAddress(iDmacDrv, "iDmacDrvOpen");
+    if (iDmacDrvOpen == NULL)
+    {
+        LOG_ERROR("Failed to get address of iDmacDrvOpen. Error code: %d\n", GetLastError());
+        return FALSE;
+    }
+
+    iDmacDrvRegisterRead = (dmacRead)GetProcAddress(iDmacDrv, "iDmacDrvRegisterRead");
+    if (iDmacDrvRegisterRead == NULL)
+    {
+        LOG_ERROR("Failed to get address of iDmacRegisterRead. Error code: %d\n", GetLastError());
+        return FALSE;
+    }
+
+    iDmacDrvRegisterWrite = (dmacWrite)GetProcAddress(iDmacDrv, "iDmacDrvRegisterWrite");
+    if (iDmacDrvRegisterWrite == NULL)
+    {
+        LOG_ERROR("Failed to get address of iDmacRegisterWrite. Error code: %d\n", GetLastError());
+        return FALSE;
+    }
+
+    iDmacDrvClose = (dmacClose)GetProcAddress(iDmacDrv, "iDmacDrvClose");
+    if (iDmacDrvClose == NULL)
+    {
+        LOG_ERROR("Failed to get address of iDmacDrvClose. Error code: %d\n", GetLastError());
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 
 BOOL WINAPI ctrlHandler(DWORD signal)
@@ -1710,8 +1801,42 @@ void pollP3P4(int& buttonsData, int& prevButtonsData, INPUT& diEvent)
 #endif // P3P4_ENABLED
 
 
-int main()
+int main(int argc, char *argv[])
 {
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "/?") == 0 || strcmp(argv[i], "/h") == 0)
+        {
+            LOG_INFO(
+                "--------------------------------------------->\n"
+                "- FastIO2KB --------------------------------->\n"
+                "--------------------------------------------->\n"
+                "  Version:       %s\n"
+                "  Architecture:  %s\n"
+                "  Profile:       %s\n"
+                "  Keymap:        %s\n"
+                "  Log Level:     %s\n",
+                VERSION_DESCRIPTION,
+                ARCHITECTURE_DESCRIPTION,
+                PROFILE_DESCRIPTION,
+                KEYMAP_DESCRIPTION,
+                LOG_LEVEL_DESCRIPTION);
+            return 0;
+        }
+    }
+
+    if (!loadNtdll())
+    {
+        LOG_ERROR("Windows Native API (ntdll) is missing or incompatible\n");
+        return 1;
+    }
+
+    if (!loadIDmacDrv())
+    {
+        LOG_ERROR("DMAC Driver Interface (iDmacDrv) is missing or incompatible\n");
+        return 1;
+    }
+
     HANDLE pseudoHProcess = GetCurrentProcess();
     HANDLE pseudoHMainThread = GetCurrentThread();
 

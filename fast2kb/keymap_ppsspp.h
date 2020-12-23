@@ -6,6 +6,9 @@
 
 
 
+#define KEYMAP_DESCRIPTION "PPSSPP"
+
+
 // Player 1
 #define P1_START          DIK_SPACE // Start
 #define P1_START_FLAGS    KEYEVENTF_SCANCODE

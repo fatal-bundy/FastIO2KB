@@ -6,6 +6,9 @@
 
 
 
+#define KEYMAP_DESCRIPTION "eX-BOARD and Deathsmiles II"
+
+
 // Player 1
 #define P1_START          DIK_W
 #define P1_START_FLAGS    KEYEVENTF_SCANCODE
