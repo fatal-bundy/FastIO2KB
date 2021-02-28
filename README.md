@@ -4,6 +4,12 @@ This repository contains source code for a Windows console application, `fast2kb
 
 For example, on a Windows-based arcade machine with a Fast I/O control system, `fast2kb.exe` can serve input to a DirectInput-compatible emulator such as MAME or PPSSPP.
 
+---
+
+*&#9758; The main fork of this project is now [JoeHowse/KB2FastIO](https://github.com/JoeHowse/FastIO2KB). Please go there to obtain the latest version, and to make any issue reports and pull requests.*
+
+---
+
 ## Credits
 
 * **Maintainer:** Joseph Howse (<josephhowse@nummist.com>)
