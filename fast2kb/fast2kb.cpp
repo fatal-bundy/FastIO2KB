@@ -12,7 +12,7 @@
 
 
 
-#define VERSION_DESCRIPTION "2020.12.23.00"
+#define VERSION_DESCRIPTION "2021.04.04.00 \"Easter\""
 
 #ifdef _WIN64
 #define ARCHITECTURE_DESCRIPTION "x64"
@@ -30,12 +30,17 @@
 #define STATUS_SUCCESS 0 // NTSTATUS value for success
 
 
-#ifdef KEYMAP_PPSSPP
-// PPSSPP's menu screens cannot handle input at submillisecond interval.
-#define POLLING_INTERVAL 1ul // milliseconds
-#else
-#define POLLING_INTERVAL 0ul // milliseconds
-#endif // KEYMAP_PPSSPP
+// To achieve minimum latency "at any cost", we could use a polling interval
+// of 0ms, i.e. submillisecond polling.
+//
+// However, a longer polling interval has the advantages of:
+//   * Reducing CPU usage
+//   * Filtering out unwanted inputs caused by mechanical switch bounce
+//
+// Based on user feedback, 2ms polling is a balanced choice.
+//
+#define POLLING_INTERVAL 2ul // milliseconds
+
 #define POLLING_INTERVAL_RESOLUTION 5000ul // 10000 == 1 millisecond
 
 
