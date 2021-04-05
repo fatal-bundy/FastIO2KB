@@ -1,4 +1,4 @@
-*&#9758; This is no longer being maintained by myself please see this project for future progress [JoeHowse/KB2FastIO](https://github.com/JoeHowse/FastIO2KB). Please go there to obtain the latest version, and to make any issue reports and pull requests.*
+***&#9758; This is no longer being maintained by myself please see this project for future progress [JoeHowse/KB2FastIO](https://github.com/JoeHowse/FastIO2KB). Please go there to obtain the latest version, and to make any issue reports and pull requests.***
 
 # FastIO2KB
 
