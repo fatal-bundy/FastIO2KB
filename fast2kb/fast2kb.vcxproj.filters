@@ -23,23 +23,20 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="key_config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="keymap_mame.h">
+    <ClInclude Include="INIReader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="keymap_ppsspp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="keymap_verbose.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="keymap_ex_board.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="README.md" />
   </ItemGroup>
 </Project>

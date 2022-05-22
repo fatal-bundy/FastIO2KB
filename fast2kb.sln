@@ -1,50 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fast2kb", "fast2kb\fast2kb.vcxproj", "{68AC070F-8564-4B5F-8421-D476E4B6E279}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		eX-BOARD_Debug|Win32 = eX-BOARD_Debug|Win32
-		eX-BOARD_Debug|x64 = eX-BOARD_Debug|x64
-		eX-BOARD_Release|Win32 = eX-BOARD_Release|Win32
-		eX-BOARD_Release|x64 = eX-BOARD_Release|x64
-		MAME_Debug|Win32 = MAME_Debug|Win32
-		MAME_Debug|x64 = MAME_Debug|x64
-		MAME_Release|Win32 = MAME_Release|Win32
-		MAME_Release|x64 = MAME_Release|x64
-		PPSSPP_Debug|Win32 = PPSSPP_Debug|Win32
-		PPSSPP_Debug|x64 = PPSSPP_Debug|x64
-		PPSSPP_Release|Win32 = PPSSPP_Release|Win32
-		PPSSPP_Release|x64 = PPSSPP_Release|x64
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.eX-BOARD_Debug|Win32.ActiveCfg = eX-BOARD_Debug|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.eX-BOARD_Debug|Win32.Build.0 = eX-BOARD_Debug|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.eX-BOARD_Debug|x64.ActiveCfg = eX-BOARD_Debug|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.eX-BOARD_Debug|x64.Build.0 = eX-BOARD_Debug|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.eX-BOARD_Release|Win32.ActiveCfg = eX-BOARD_Release|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.eX-BOARD_Release|Win32.Build.0 = eX-BOARD_Release|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.eX-BOARD_Release|x64.ActiveCfg = eX-BOARD_Release|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.eX-BOARD_Release|x64.Build.0 = eX-BOARD_Release|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Debug|Win32.ActiveCfg = MAME_Debug|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Debug|Win32.Build.0 = MAME_Debug|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Debug|x64.ActiveCfg = MAME_Debug|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Debug|x64.Build.0 = MAME_Debug|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Release|Win32.ActiveCfg = MAME_Release|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Release|Win32.Build.0 = MAME_Release|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Release|x64.ActiveCfg = MAME_Release|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.MAME_Release|x64.Build.0 = MAME_Release|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Debug|Win32.ActiveCfg = PPSSPP_Debug|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Debug|Win32.Build.0 = PPSSPP_Debug|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Debug|x64.ActiveCfg = PPSSPP_Debug|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Debug|x64.Build.0 = PPSSPP_Debug|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Release|Win32.ActiveCfg = PPSSPP_Release|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Release|Win32.Build.0 = PPSSPP_Release|Win32
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Release|x64.ActiveCfg = PPSSPP_Release|x64
-		{68AC070F-8564-4B5F-8421-D476E4B6E279}.PPSSPP_Release|x64.Build.0 = PPSSPP_Release|x64
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.Debug|Win32.ActiveCfg = Debug|Win32
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.Debug|Win32.Build.0 = Debug|Win32
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.Release|Win32.ActiveCfg = Release|Win32
+		{68AC070F-8564-4B5F-8421-D476E4B6E279}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
