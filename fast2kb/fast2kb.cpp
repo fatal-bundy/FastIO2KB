@@ -129,7 +129,7 @@ int dword_9B4208 = 1;
 
 BOOL setup_keys(INPUTS *inputs)
 {
-	INIReader reader("z:\config.ini");
+	INIReader reader("config.ini");
 	if (reader.ParseError() != 0) {
 		std::cout << "Can't load 'config.ini'\n"; // Defults from reader.Get will be honored even config cant be found
 	}
